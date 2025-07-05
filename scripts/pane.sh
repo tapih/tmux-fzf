@@ -6,10 +6,20 @@ source "$CURRENT_DIR/.envs"
 current_pane_origin=$(tmux display-message -p '#S:#{window_index}.#{pane_index}: #{window_name}')
 current_pane=$(tmux display-message -p '#S:#{window_index}.#{pane_index}')
 
-if [[ -z "$TMUX_FZF_PANE_FORMAT" ]]; then
-    panes=$(tmux list-panes -a -F "#S:#{window_index}.#{pane_index}: [#{window_name}:#{pane_title}] #{pane_current_command}  [#{pane_width}x#{pane_height}] [history #{history_size}/#{history_limit}, #{history_bytes} bytes] #{?pane_active,[active],[inactive]}")
+if [[ "$TMUX_FZF_PANE_CURRENT_WINDOW" == "1" ]]; then
+    # List panes from current window only
+    if [[ -z "$TMUX_FZF_PANE_FORMAT" ]]; then
+        panes=$(tmux list-panes -F "#S:#{window_index}.#{pane_index}: [#{window_name}:#{pane_title}] #{pane_current_command}  [#{pane_width}x#{pane_height}] [history #{history_size}/#{history_limit}, #{history_bytes} bytes] #{?pane_active,[active],[inactive]}")
+    else
+        panes=$(tmux list-panes -F "#S:#{window_index}.#{pane_index}: $TMUX_FZF_PANE_FORMAT")
+    fi
 else
-    panes=$(tmux list-panes -a -F "#S:#{window_index}.#{pane_index}: $TMUX_FZF_PANE_FORMAT")
+    # List panes from all sessions and windows (default behavior)
+    if [[ -z "$TMUX_FZF_PANE_FORMAT" ]]; then
+        panes=$(tmux list-panes -a -F "#S:#{window_index}.#{pane_index}: [#{window_name}:#{pane_title}] #{pane_current_command}  [#{pane_width}x#{pane_height}] [history #{history_size}/#{history_limit}, #{history_bytes} bytes] #{?pane_active,[active],[inactive]}")
+    else
+        panes=$(tmux list-panes -a -F "#S:#{window_index}.#{pane_index}: $TMUX_FZF_PANE_FORMAT")
+    fi
 fi
 
 FZF_DEFAULT_OPTS="$FZF_DEFAULT_OPTS --header='Select an action.'"
